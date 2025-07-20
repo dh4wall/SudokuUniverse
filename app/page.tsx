@@ -30,8 +30,12 @@ export default function HomePage() {
       if (!response.ok) throw new Error(result.error);
       setPuzzle(result.grid);
       setPlayerGrid(result.grid);
-    } catch (err: any) {
-      setError("Failed to generate a new puzzle. Please try again.");
+    } catch (err) { // This block is now fixed
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred while generating a puzzle.");
+      }
     } finally {
       setIsGenerating(false);
     }
