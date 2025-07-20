@@ -1,103 +1,114 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useCallback } from 'react';
+import SudokuGrid from '@/components/SudokuGrid';
+import { solveSudoku } from '@/utils/sudokuSolver';
+import { SudokuGrid as GridType } from '@/types/sudoku';
+
+const checkSolution = (puzzle: GridType, userSolution: GridType): boolean => {
+  const { solvedGrid } = solveSudoku(puzzle);
+  if (!solvedGrid) return false;
+  return JSON.stringify(userSolution) === JSON.stringify(solvedGrid);
+};
+
+export default function HomePage() {
+  const [puzzle, setPuzzle] = useState<GridType | null>(null);
+  const [playerGrid, setPlayerGrid] = useState<GridType | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [validationStatus, setValidationStatus] = useState<'correct' | 'incorrect' | 'incomplete' | 'revealed' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleNewGame = useCallback(async () => {
+    setIsGenerating(true);
+    setPuzzle(null);
+    setPlayerGrid(null);
+    setValidationStatus(null);
+    setError(null);
+    try {
+      const response = await fetch('/api/generate-sudoku');
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      setPuzzle(result.grid);
+      setPlayerGrid(result.grid);
+    } catch (err: any) {
+      setError("Failed to generate a new puzzle. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  }, []);
+
+  const handlePlayerCellChange = (row: number, col: number, value: number) => {
+    if (!playerGrid) return;
+    const newGrid = playerGrid.map(r => [...r]);
+    newGrid[row][col] = value;
+    setPlayerGrid(newGrid);
+    setValidationStatus(null);
+  };
+
+  const handleCheckSolution = () => {
+    if (!puzzle || !playerGrid) return;
+    if (playerGrid.flat().includes(0)) {
+      setValidationStatus('incomplete');
+      return;
+    }
+    const isCorrect = checkSolution(puzzle, playerGrid);
+    setValidationStatus(isCorrect ? 'correct' : 'incorrect');
+  };
+
+  // --- New "Give Up" Function ---
+  const handleGiveUp = () => {
+    if (!puzzle) return;
+    const { solvedGrid } = solveSudoku(puzzle);
+    if (solvedGrid) {
+      setPlayerGrid(solvedGrid); // Fill the grid with the solution
+      setValidationStatus('revealed'); // Show a message
+    }
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex flex-col items-center p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-md mt-8">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-center text-slate-800 dark:text-slate-200 mb-4">Sudoku Challenge</h2>
+          <div className="flex justify-center mb-6">
+            <button onClick={handleNewGame} disabled={isGenerating} className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50">
+              {isGenerating ? "Generating..." : "Start New Game"}
+            </button>
+          </div>
+          
+          {error && <p className="text-center text-red-500 mb-4">{error}</p>}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          {playerGrid && puzzle ? (
+            <>
+              <SudokuGrid grid={playerGrid} originalGrid={puzzle} onCellChange={handlePlayerCellChange} title="Fill in the grid:" />
+              <div className="mt-6 flex justify-center items-center space-x-4">
+                <button onClick={handleCheckSolution} disabled={validationStatus === 'revealed'} className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 disabled:opacity-50">
+                  Check My Solution
+                </button>
+                {/* --- New "Give Up" Button --- */}
+                <button onClick={handleGiveUp} disabled={validationStatus === 'revealed'} className="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50">
+                  Give Up
+                </button>
+              </div>
+            </>
+          ) : (
+            !isGenerating && <p className="text-center text-slate-500">Click "Start New Game" to begin!</p>
+          )}
+
+          {validationStatus && (
+            <p className={`mt-4 text-center font-bold text-lg ${
+              validationStatus === 'correct' ? 'text-green-500' : 
+              validationStatus === 'incorrect' ? 'text-red-500' :
+              validationStatus === 'revealed' ? 'text-blue-500' : 'text-yellow-500'
+            }`}>
+              {validationStatus === 'correct' && '🎉 Congratulations! You solved it correctly!'}
+              {validationStatus === 'incorrect' && '🤔 Not quite right. Keep trying!'}
+              {validationStatus === 'incomplete' && 'Looks like you missed a few spots!'}
+              {validationStatus === 'revealed' && 'Here is the full solution.'}
+            </p>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
