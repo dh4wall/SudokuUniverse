@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import Navbar from '@/components/Navbar';
-import AppWrapper from '@/components/AppWrapper'; // Import the new wrapper
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -23,11 +22,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* Use the AppWrapper to show the loader */}
-          <AppWrapper>
-            <Navbar />
-            <main>{children}</main>
-          </AppWrapper>
+          <Navbar />
+          <main>{children}</main>
         </ThemeProvider>
       </body>
     </html>

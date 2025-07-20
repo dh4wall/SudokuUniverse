@@ -34,7 +34,7 @@ const Navbar = () => {
 
   return (
     <nav className="w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:p-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
             <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-500">
@@ -46,17 +46,7 @@ const Navbar = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {/* <button
-              onClick={toggleTheme}
-              className="p-2 w-9 h-9 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none"
-              aria-label="Toggle theme"
-            >
-              {mounted ? (
-                theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />
-              ) : (
-                <div className="w-5 h-5" />
-              )}
-            </button> */}
+            
             <div className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
               <User size={20} />
             </div>
