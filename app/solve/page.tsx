@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // Removed unused 'useCallback'
 import SudokuGrid from '@/components/SudokuGrid';
 import { solveSudoku, validateInitialGrid } from '@/utils/sudokuSolver';
 import { SudokuGrid as GridType } from '@/types/sudoku';

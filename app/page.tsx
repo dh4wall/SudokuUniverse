@@ -55,13 +55,12 @@ export default function HomePage() {
     setValidationStatus(isCorrect ? 'correct' : 'incorrect');
   };
 
-  // --- New "Give Up" Function ---
   const handleGiveUp = () => {
     if (!puzzle) return;
     const { solvedGrid } = solveSudoku(puzzle);
     if (solvedGrid) {
-      setPlayerGrid(solvedGrid); // Fill the grid with the solution
-      setValidationStatus('revealed'); // Show a message
+      setPlayerGrid(solvedGrid);
+      setValidationStatus('revealed');
     }
   };
 
@@ -85,14 +84,13 @@ export default function HomePage() {
                 <button onClick={handleCheckSolution} disabled={validationStatus === 'revealed'} className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 disabled:opacity-50">
                   Check My Solution
                 </button>
-                {/* --- New "Give Up" Button --- */}
                 <button onClick={handleGiveUp} disabled={validationStatus === 'revealed'} className="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50">
                   Give Up
                 </button>
               </div>
             </>
           ) : (
-            !isGenerating && <p className="text-center text-slate-500">Click "Start New Game" to begin!</p>
+            !isGenerating && <p className="text-center text-slate-500">Click &quot;Start New Game&quot; to begin!</p>
           )}
 
           {validationStatus && (
